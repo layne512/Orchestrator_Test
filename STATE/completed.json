@@ -1,0 +1,7 @@
+{
+  "wave": "T1",
+  "tasks": [],
+  "last_updated": "2026-05-02T00:00:00Z",
+  "schema_version": 1,
+  "_comment": "Tasks squash-merged into sandbox-staging-T1 with integration test green. Each entry: { task_id, merge_sha, merge_tag, completed_at }"
+}

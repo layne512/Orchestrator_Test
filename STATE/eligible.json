@@ -1,0 +1,7 @@
+{
+  "wave": "T1",
+  "tasks": [],
+  "last_updated": "2026-05-02T00:00:00Z",
+  "schema_version": 1,
+  "_comment": "Tasks ready to dispatch. Orchestrator computes this set each cycle from SHAKEDOWN/* + state of dependencies. This file is mostly informational; the orchestrator may not always write to it."
+}

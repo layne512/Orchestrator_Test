@@ -1,0 +1,7 @@
+{
+  "wave": "T1",
+  "executors": [],
+  "last_updated": "2026-05-02T00:00:00Z",
+  "schema_version": 1,
+  "_comment": "Tasks currently dispatched. Each entry: { task_id, executor_id, branch (or 'sim'), started_at, last_heartbeat }"
+}
