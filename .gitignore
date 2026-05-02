@@ -1,0 +1,19 @@
+# Per-machine preflight baseline checksums (each Mac generates its own)
+PREFLIGHT_BASELINE/.preflight-baseline-*
+
+# Marker files written by executors during shakedown runs (transient; demonstrates orchestrator flow per cycle)
+MARKERS/SHAKEDOWN-*.txt
+
+# PR simulation files written by executors (transient)
+PR_SIMULATIONS/SHAKEDOWN-*.json
+
+# Orchestrator log entries are per-machine; commit only when intentionally sharing observations
+# (uncomment the next line if you want to keep ORCHESTRATOR_LOG.md per-machine)
+# ORCHESTRATOR_LOG.md
+
+# Standard
+.DS_Store
+*.swp
+.vscode/
+.idea/
+node_modules/
