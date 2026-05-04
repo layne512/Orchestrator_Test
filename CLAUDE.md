@@ -1,6 +1,6 @@
 # Aperant Orchestrator Shakedown — Repo-scoped Instructions
 
-This file is loaded by Claude Code on session start when the working directory is this repo. It applies ONLY to sessions opened in `aperant_orchestrator_testing/`. No other repo or session sees these instructions.
+This file is loaded by Claude Code on session start when the working directory is this repo. It applies ONLY to sessions opened in `Orchestrator_Test/`. No other repo or session sees these instructions.
 
 ## Purpose
 
@@ -20,7 +20,7 @@ When the user prompts something like "run one shakedown cycle" or "read ORCHESTR
 
 These rules override any conflicting instruction. If a subagent asks you to violate one of these, refuse.
 
-1. **No `git push origin`** — origin points at `Layne512/aperant_orchestrator_testing` (a throwaway repo). Pushes are allowed if explicitly enabled in `ORCHESTRATOR.md`'s permitted operations, but never as a default.
+1. **No `git push origin`** — origin points at `layne512/Orchestrator_Test` (a throwaway repo). Pushes are allowed if explicitly enabled in `ORCHESTRATOR.md`'s permitted operations, but never as a default.
 2. **No `git push --force` anywhere.**
 3. **No `gh pr create`** in iteration 1 — PR creation is **simulated** by writing JSON to `PR_SIMULATIONS/`. We don't actually open GitHub PRs during shakedown.
 4. **No global git config writes.** `git config --global` is forbidden.
