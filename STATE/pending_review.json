@@ -1,0 +1,7 @@
+{
+  "wave": "T1",
+  "prs": [],
+  "last_updated": "2026-05-02T00:00:00Z",
+  "schema_version": 1,
+  "_comment": "Tasks whose executor returned successfully (marker + PR sim written), awaiting AI review."
+}
