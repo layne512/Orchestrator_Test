@@ -43,7 +43,7 @@ Orchestrator validates the response and applies — same review-gate pattern as 
 ## Pattern P-001: Missing referenced file in worktree
 
 **First seen:** seed pattern
-**Recurrences:** 0
+**Recurrences:** 1 (SHAKEDOWN-02 on 2026-05-05)
 **Class:** preflight-missing-filesystem
 
 **Symptom:** Executor fails with `ENOENT: no such file or directory` when reading a path the task spec referenced.
@@ -65,7 +65,7 @@ Orchestrator validates the response and applies — same review-gate pattern as 
 ## Pattern P-002: Missing or empty env var
 
 **First seen:** seed pattern
-**Recurrences:** 0
+**Recurrences:** 1 (SHAKEDOWN-03 on 2026-05-05)
 **Class:** preflight-missing-env
 
 **Symptom:** Runtime error (NoneType, undefined) on accessing `process.env.X` or `os.getenv("X")`; or service call rejected with auth error.
