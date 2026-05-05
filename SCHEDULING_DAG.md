@@ -6,12 +6,14 @@
 SHAKEDOWN-01 (happy path) ────────────────────────────────────┐
 SHAKEDOWN-02 (missing-file stuck) ────────────────────────────┤
 SHAKEDOWN-03 (pattern match existing) ────────────────────────┤
-SHAKEDOWN-04 (pattern match new) ─────────────────────────────┼─► T1 complete
-SHAKEDOWN-05 (integration fail + auto-revert) ────────────────┤
+SHAKEDOWN-04 (pattern match new) ─────────────────────────────┤
+SHAKEDOWN-05 (integration fail + auto-revert) ────────────────┼─► T1 complete
 SHAKEDOWN-06 (parallel preflight inheritance) ────────────────┤
 SHAKEDOWN-07 (corruption recovery) ───────────────────────────┤
 SHAKEDOWN-08 (wave QA gate) ──────────────────────────────────┤
-SHAKEDOWN-09 (spec-induced stuck) ────────────────────────────┘
+SHAKEDOWN-09 (spec-induced stuck) ────────────────────────────┤
+SHAKEDOWN-10 (nested missing structure) ──────────────────────┤
+SHAKEDOWN-11 (double-blind diagnostic) ───────────────────────┘
 ```
 
 ## Priority scores (initial)
@@ -29,6 +31,8 @@ SHAKEDOWN-09 (spec-induced stuck) ───────────────�
 | SHAKEDOWN-07 | TEST | 15 | 0 | 15 | Corruption recovery; manually inject fault |
 | SHAKEDOWN-08 | TEST | 5 | 0 | 5 | Wave QA gate; triggered after the 7 prior |
 | SHAKEDOWN-09 | TEST | 12 | 0 | 12 | Spec-induced stuck; spawns spec-analyst |
+| SHAKEDOWN-10 | TEST | 10 | 1 | 110 | Nested missing structure; STEP 0 mkdir-p self-heal |
+| SHAKEDOWN-11 | TEST | 12 | 1 | 112 | Double-blind diagnostic; deliberately misleading Report 1 |
 
 ## Run order recommendation
 
@@ -36,10 +40,10 @@ Run in numeric order (01 → 09). Each shakedown is designed to verify a specifi
 
 ## Dispatch policy for shakedown
 
-Iteration 1 deliberately uses **1 task per cycle** (not max parallelism) so observability is maximal — you see each cycle's full effect on STATE files before the next cycle introduces new state. After all 9 pass, we test parallel dispatch in iteration 2.
+Iteration 1 deliberately uses **1 task per cycle** (not max parallelism) so observability is maximal — you see each cycle's full effect on STATE files before the next cycle introduces new state. After all 11 pass, we test parallel dispatch in iteration 2.
 
 **Exception:** SHAKEDOWN-06 specifically tests parallel-task preflight inheritance — that scenario instructs the orchestrator to dispatch two tasks simultaneously and observe propagation.
 
 ## Currently scheduled
 
-Only `SHAKEDOWN-01_happy-path.md` is present in `SHAKEDOWN/` at initial commit. The other 8 are added iteratively as each prior shakedown validates.
+All 11 SHAKEDOWN specs are present in `SHAKEDOWN/` from the initial commit. Eligibility per cycle is determined by ORCHESTRATOR.md Step 4.
