@@ -80,6 +80,38 @@ check_branch() {
   esac
 }
 
+# === Check 70 — quotas / rate limits (external-blocker-quota class) ===
+check_quotas() {
+  echo "[70_quotas] checking external storage/rate-limit quotas"
+
+  # Iter 1: no real services are called, so this check is permissive by default.
+  # It only fails if a sentinel is present, which lets the orchestrator
+  # exercise this code path deterministically (e.g., SHAKEDOWN-04).
+  local sentinel_file="$REPO_ROOT/STATE/.simulated_quota_exhausted"
+
+  if [[ -f "$sentinel_file" ]]; then
+    echo "[70_quotas] FAIL: sentinel file present at STATE/.simulated_quota_exhausted"
+    echo "  - simulated external quota/rate-limit exhausted"
+    echo "  - remove the sentinel (or resolve the underlying real quota) before dispatching"
+    return 1
+  fi
+
+  if [[ "${SIMULATED_QUOTA_EXHAUSTED:-0}" == "1" ]]; then
+    echo "[70_quotas] FAIL: env SIMULATED_QUOTA_EXHAUSTED=1"
+    echo "  - simulated external quota/rate-limit exhausted via env trigger"
+    echo "  - unset SIMULATED_QUOTA_EXHAUSTED before dispatching"
+    return 1
+  fi
+
+  # In production iterations this block will probe real services
+  # (git LFS quota, GitHub API rate-limit headers, Vercel deploy quota,
+  # Supabase row count, Stripe API limits, S3 bucket quota, etc.)
+  # and fail fast with the offending service name. Stub for iter 1.
+
+  echo "[70_quotas] OK"
+  return 0
+}
+
 # === Check 99 — STATE shape (JSON validity) ===
 check_state_shape() {
   echo "[99_state_shape] checking STATE/*.json valid JSON"
@@ -103,6 +135,7 @@ run_full() {
   local fail=0
   check_filesystem || fail=1
   check_branch || fail=1
+  check_quotas || fail=1
   check_state_shape || fail=1
   if [[ $fail -ne 0 ]]; then
     echo "[preflight] FAILED — see issues above; do NOT dispatch tasks"

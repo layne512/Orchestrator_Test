@@ -128,3 +128,34 @@ Orchestrator validates the response and applies — same review-gate pattern as 
 - Merge conflict markers left in state file
 
 **Prevention scope:** All cycles (preflight runs every cycle)
+
+---
+
+## Pattern P-005: Storage/quota exhaustion
+
+**First seen:** 2026-05-05 (SHAKEDOWN-04)
+**Recurrences:** 0
+
+**Class:** external-blocker-quota
+
+**Symptom:** Executor (or STEP 0 self-heal) aborts with a quota / rate-limit / capacity message from an external service — e.g., `STUCK: simulated git LFS quota exhausted (100000000 > 99999999)`, HTTP 429, "rate limit exceeded", "deploy limit reached", "row count exceeded plan", "bucket over quota", exit code 1 before any task work begins.
+
+**Root cause:** A finite resource owned by an external provider (storage bytes, request count per window, deploy minutes, row count, object count) has been consumed up to or beyond its ceiling. The provider rejects the next operation, and because the limit is owned outside the repo, no in-repo code change can clear it; the cycle has to halt and surface the blocker to a human (or wait for a window reset).
+
+**Specific fix:** For the SHAKEDOWN-04 instance, detect the simulated trigger (sentinel file `STATE/.simulated_quota_exhausted` or env `SIMULATED_QUOTA_EXHAUSTED=1`) at preflight and abort before dispatch with a clear message identifying the exhausted quota.
+
+**Generalized check (catches THIS + similar):** preflight.sh check `70_quotas` runs every cycle and probes the set of external quotas relevant to the current wave. In iter 1 it is permissive (returns 0) but honors a sentinel file / env trigger so the orchestrator can deterministically simulate exhaustion. In production iterations the same function is the single home for real probes (LFS quota, GitHub API rate-limit headers, Vercel deploy quota, Supabase row/storage usage, Stripe API rate limit, S3/Cloudflare R2 bucket usage, npm publish rate limit) — each one fails with the specific provider + remaining-headroom string so the orchestrator can route to the right human.
+
+**Other patterns this covers:**
+- GitHub REST/GraphQL API rate-limit (HTTP 429 / `X-RateLimit-Remaining: 0`)
+- Vercel monthly deploy / build-minute quota
+- Supabase free-tier row count or storage cap
+- Stripe API per-second request rate limit
+- AWS S3 / Cloudflare R2 bucket storage or request quota
+- npm publish rate limit / npmjs daily download cap
+- OpenAI / Anthropic API token-per-minute quota
+- DoseSpot or Daily.co per-plan usage ceiling
+- DNS provider record-count limit
+- Cloudflare Workers CPU-ms or request quota
+
+**Prevention scope:** All cycles (preflight runs every cycle; `check_quotas` invoked from `run_full()` between `check_branch` and `check_state_shape`). All waves benefit, present and future, because the check is wave-agnostic — only the probe list grows as new external services are integrated.
