@@ -1,0 +1,11 @@
+{
+  "task_id": "SHAKEDOWN-06",
+  "title": "SHAKEDOWN-06: parallel preflight inheritance",
+  "body": "Verifies parallel dispatch + checksum-based preflight inheritance. Designed to run concurrent with another eligible task.",
+  "head": "sandbox/test-06-parallel",
+  "base": "sandbox-staging-T1",
+  "files_changed": ["MARKERS/SHAKEDOWN-06.txt"],
+  "simulated": true,
+  "concurrent_dispatch_expected": true,
+  "created_at": "2026-05-05T05:04:25Z"
+}
