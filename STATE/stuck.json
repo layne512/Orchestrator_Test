@@ -1,7 +1,126 @@
 {
   "wave": "T1",
-  "tasks": [],
-  "last_updated": "2026-05-02T00:00:00Z",
+  "tasks": [
+    {
+      "task_id": "SHAKEDOWN-04",
+      "stuck_at": "2026-05-05T00:04:30Z",
+      "error": "STUCK: simulated git LFS quota exhausted (100000000 > 99999999) — novel pattern (no match P-001..P-004)",
+      "stuck_state_docs": [
+        "STUCK_STATE/SHAKEDOWN-04_Error4Orchestrator.md",
+        "STUCK_STATE/SHAKEDOWN-04_ErrorDoubleCheck4Orchestrator.md"
+      ],
+      "heal_protocol": {
+        "phase_6a_initial_diagnosis": "NOVEL pattern (storage/quota exhaustion); spawn failure-analyst",
+        "phase_6b_reconciliation": "AGREE — same root cause + same fix path",
+        "phase_6d_failure_analyst": {
+          "fields_returned": 4,
+          "validation": "PASS",
+          "patch_applied": true,
+          "patch_validated": "sentinel-test FAIL (1), env-test FAIL (1), clean-test PASS (0)",
+          "pattern_id": "P-005",
+          "pattern_name": "Storage/quota exhaustion",
+          "commit": "7f17e36 fix(preflight): add P-005 storage/quota check; append pattern entry"
+        }
+      },
+      "status": "preflight_patched_ready_retry",
+      "auto_resume_disabled_per_iter1_rule": true
+    },
+    {
+      "task_id": "SHAKEDOWN-05",
+      "stuck_at": "2026-05-05T00:11:00Z",
+      "error": "Integration test phase 2 fail (marker content mismatch). Designed-to-fail per spec.",
+      "stuck_state_docs": [],
+      "merge_attempted": {
+        "pre_merge_tag": "merge-pre-SHAKEDOWN-05-1777966697",
+        "merge_sha": "02a4df7b63f5ad99b983904ea20195843efa8b1f",
+        "revert_sha": "5385fc2",
+        "failed_merge_tag": "failed-merge-T1-SHAKEDOWN-05-5385fc2",
+        "integration_failures_doc": "INTEGRATION_FAILURES/SHAKEDOWN-05.md"
+      },
+      "status": "needs_fix",
+      "auto_resume_disabled_per_iter1_rule": true
+    },
+    {
+      "task_id": "SHAKEDOWN-09",
+      "stuck_at": "2026-05-05T00:13:30Z",
+      "error": "Spec ambiguous (no measurable acceptance criterion).",
+      "stuck_state_docs": [
+        "STUCK_STATE/SHAKEDOWN-09_Error4Orchestrator.md",
+        "STUCK_STATE/SHAKEDOWN-09_ErrorDoubleCheck4Orchestrator.md"
+      ],
+      "heal_protocol": {
+        "phase_6a_initial_diagnosis": "SPEC issue (not preflight-fixable)",
+        "phase_6b_reconciliation": "AGREE",
+        "phase_6c_spec_analyst": {
+          "fields_returned": 4,
+          "is_spec_issue": true,
+          "validation": "PASS",
+          "lesson_applied": "L-001: Ambiguous acceptance criteria",
+          "template_updated": "v2 → v3",
+          "recommended_action": "move-to-awaiting-spec-revision",
+          "commit": "75cdb18 fix(spec): add lesson L-001 (verifiable acceptance criteria); template v3"
+        }
+      },
+      "status": "awaiting_spec_revision",
+      "auto_resume_disabled_per_iter1_rule": true
+    },
+    {
+      "task_id": "SHAKEDOWN-11",
+      "stuck_at": "2026-05-05T00:16:00Z",
+      "error": "STEP 0 simulated failure with deliberately misleading error message (env-var surface, STATE-JSON underneath).",
+      "stuck_state_docs": [
+        "STUCK_STATE/SHAKEDOWN-11_Error4Orchestrator.md",
+        "STUCK_STATE/SHAKEDOWN-11_ErrorDoubleCheck4Orchestrator.md"
+      ],
+      "heal_protocol": {
+        "phase_6a_initial_diagnosis": "P-002 (missing env var) — based on Report 1 alone",
+        "phase_6b_reconciliation": "DISAGREE-root-cause — Report 2 Section A reveals env var IS set; real cause is malformed STATE/eligible.json (simulated)",
+        "phase_6b_final_diagnosis": "P-004 (Invalid STATE JSON)",
+        "phase_6b_fix_applied": "git checkout HEAD -- STATE/eligible.json (idempotent; no actual corruption to repair)",
+        "read_order_verified": "Report 1 timestamp 00:15:30 < Report 2 timestamp 00:16:00 < final-diagnosis 00:16:00",
+        "double_blind_test_passed": "initial diagnosis (P-002) differs from final diagnosis (P-004)"
+      },
+      "status": "p004_recurrence_logged_simulation_only",
+      "auto_resume_disabled_per_iter1_rule": true
+    },
+    {
+      "task_id": "SHAKEDOWN-02",
+      "stuck_at": "2026-05-05T00:18:30Z",
+      "error": "STUCK: required file lib/intentionally-nonexistent/required-by-shakedown-02.dat not present, no canonical source to copy from. Designed-to-fail per spec.",
+      "stuck_state_docs": [
+        "STUCK_STATE/SHAKEDOWN-02_Error4Orchestrator.md",
+        "STUCK_STATE/SHAKEDOWN-02_ErrorDoubleCheck4Orchestrator.md"
+      ],
+      "heal_protocol": {
+        "phase_6a_initial_diagnosis": "Missing file → P-001 (existing pattern)",
+        "phase_6b_reconciliation": "AGREE — Section A confirms file/dir absent; Section C explicitly recommends P-001 match",
+        "phase_6_action": "Existing pattern P-001 — incremented recurrence counter (0 → 1) in FAILURE_PATTERNS.md. NO failure-analyst spawn (existing pattern). NO preflight patch (existing 00_filesystem check covers the class; this fictitious path is by-design unfixable).",
+        "pattern_id": "P-001",
+        "pattern_name": "Missing referenced file in worktree"
+      },
+      "status": "existing_pattern_p001_recurrence_logged",
+      "auto_resume_disabled_per_iter1_rule": true
+    },
+    {
+      "task_id": "SHAKEDOWN-03",
+      "stuck_at": "2026-05-05T00:20:30Z",
+      "error": "STUCK: env var SHAKEDOWN_03_REQUIRED_KEY is not set or is empty. Designed-to-fail per spec.",
+      "stuck_state_docs": [
+        "STUCK_STATE/SHAKEDOWN-03_Error4Orchestrator.md",
+        "STUCK_STATE/SHAKEDOWN-03_ErrorDoubleCheck4Orchestrator.md"
+      ],
+      "heal_protocol": {
+        "phase_6a_initial_diagnosis": "Missing env var → P-002 (existing pattern)",
+        "phase_6b_reconciliation": "AGREE — Section A confirms env var EMPTY; Section C explicitly recommends P-002 match",
+        "phase_6_action": "Existing pattern P-002 — incremented recurrence counter (0 → 1) in FAILURE_PATTERNS.md. NO failure-analyst spawn. NO preflight patch (P-002's check_env_vars stub is documented; iter-1 has no real env vars to require).",
+        "pattern_id": "P-002",
+        "pattern_name": "Missing or empty env var"
+      },
+      "status": "existing_pattern_p002_recurrence_logged",
+      "auto_resume_disabled_per_iter1_rule": true
+    }
+  ],
+  "last_updated": "2026-05-05T00:20:30Z",
   "schema_version": 1,
-  "_comment": "Tasks in heal protocol. Each entry: { task_id, stuck_at, error, stuck_state_doc, status: 'awaiting_human' | 'heal_in_progress' | 'preflight_patched_ready_retry' }"
+  "_comment": "Tasks in heal protocol. Status values: 'awaiting_human' | 'heal_in_progress' | 'preflight_patched_ready_retry' | 'needs_fix' | 'awaiting_spec_revision' | 'p004_recurrence_logged_simulation_only'."
 }

@@ -1,7 +1,42 @@
 {
   "wave": "T1",
-  "tasks": [],
-  "last_updated": "2026-05-02T00:00:00Z",
+  "tasks": [
+    {
+      "task_id": "SHAKEDOWN-01",
+      "merge_sha": "6ebf062bacd21bedb6a9da42ef6f46d71929ce1e",
+      "merge_tag": "task-merged-T1-SHAKEDOWN-01-6ebf062",
+      "pre_merge_tag": "merge-pre-SHAKEDOWN-01-1777956669",
+      "integration_test": "PASS",
+      "completed_at": "2026-05-04T00:03:00Z"
+    },
+    {
+      "task_id": "SHAKEDOWN-06",
+      "merge_sha": "de58e2a2aa7048da7f93c1a4108b4d675746a717",
+      "merge_tag": "task-merged-T1-SHAKEDOWN-06-de58e2a",
+      "pre_merge_tag": "merge-pre-SHAKEDOWN-06-1777962722",
+      "integration_test": "PASS",
+      "completed_at": "2026-05-05T00:03:00Z",
+      "dispatch_mode": "solo",
+      "coverage_caveat": "parallel-inheritance behavior NOT exercised; re-run 06 in a true parallel cycle for full coverage"
+    },
+    {
+      "task_id": "SHAKEDOWN-07",
+      "merge_sha": "b02f030d87276d6774e8b6b4dd5b387518bb2dc9",
+      "merge_tag": "task-merged-T1-SHAKEDOWN-07-b02f030",
+      "integration_test": "PASS",
+      "completed_at": "2026-05-05T00:09:00Z",
+      "phase": "Phase 1 only — Phase 2 corruption-injection requires manual human action per spec"
+    },
+    {
+      "task_id": "SHAKEDOWN-10",
+      "merge_sha": "64444b8c89a4695cb38dfda092fe83f91c169d0b",
+      "merge_tag": "task-merged-T1-SHAKEDOWN-10-64444b8",
+      "integration_test": "PASS",
+      "completed_at": "2026-05-05T00:19:30Z",
+      "self_healed_paths": ["MARKERS/SHAKEDOWN-10/", "MARKERS/SHAKEDOWN-10/sub/", "MARKERS/SHAKEDOWN-10/sub/inner.txt"]
+    }
+  ],
+  "last_updated": "2026-05-05T00:19:30Z",
   "schema_version": 1,
   "_comment": "Tasks squash-merged into sandbox-staging-T1 with integration test green. Each entry: { task_id, merge_sha, merge_tag, completed_at }"
 }
