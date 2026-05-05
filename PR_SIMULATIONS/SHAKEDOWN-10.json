@@ -1,0 +1,11 @@
+{
+  "task_id": "SHAKEDOWN-10",
+  "title": "SHAKEDOWN-10: nested missing structure self-heal",
+  "body": "Verifies STEP 0 mkdir -p self-heal for 3-level-deep missing nested structure.",
+  "head": "sandbox/test-10-nested-missing",
+  "base": "sandbox-staging-T1",
+  "files_changed": ["MARKERS/SHAKEDOWN-10.txt", "MARKERS/SHAKEDOWN-10/sub/inner.txt"],
+  "simulated": true,
+  "self_healed_paths": ["MARKERS/SHAKEDOWN-10/", "MARKERS/SHAKEDOWN-10/sub/", "MARKERS/SHAKEDOWN-10/sub/inner.txt"],
+  "created_at": "2026-05-05T07:51:08Z"
+}
