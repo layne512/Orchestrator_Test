@@ -1,0 +1,10 @@
+{
+  "task_id": "SHAKEDOWN-01",
+  "title": "SHAKEDOWN-01: happy path marker",
+  "body": "Writes MARKERS/SHAKEDOWN-01.txt with expected content. No production code changes.",
+  "head": "sandbox/test-01-happy-path",
+  "base": "sandbox-staging-T1",
+  "files_changed": ["MARKERS/SHAKEDOWN-01.txt"],
+  "simulated": true,
+  "created_at": "2026-05-05T02:28:09Z"
+}
