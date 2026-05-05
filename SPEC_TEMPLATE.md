@@ -2,7 +2,7 @@
 
 Every task spec follows this template. Authors instantiate it; orchestrator dispatches the result; spec-analyst proposes updates to this file when lessons emerge.
 
-**Template version:** 2 (added STUCK PROTOCOL with two-report pattern)
+**Template version:** 3 (added L-001: acceptance criteria must be verifiable bash commands, not prose)
 
 ---
 
@@ -86,7 +86,25 @@ Numbered steps the executor must execute. Each step concrete (specific commands,
 
 ### `## Acceptance criteria`
 
-Bash commands (NOT prose) that must all return success for the task to be considered done.
+This section MUST consist exclusively of bash commands (or equivalent runnable checks) inside a fenced ```bash block. Each command MUST exit 0 on success and non-zero on failure. The orchestrator (or a CI harness) runs the entire block; if every command exits 0, the task is done.
+
+Forbidden in this section (orchestrator pre-dispatch validator rejects on match):
+- Prose-only criteria ("the marker file should be acceptable", "looks reasonable").
+- Subjective adjectives: `acceptable`, `appropriate`, `good enough`, `reasonable`, `nice`, `clean enough`.
+- Self-referential standards: "you should know it when you see it", "use your judgment", "subjective".
+- Mixed prose-and-command lists where the prose carries the actual criterion.
+
+If the task produces a marker file, frontmatter MUST set `expected_marker_content` to the EXACT string the marker should contain (no placeholders like `"(none)"` or `"TBD"`), and the acceptance criteria MUST verify that exact value, e.g.:
+
+```bash
+set -euo pipefail
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+test -f "$REPO_ROOT/MARKERS/<task_id>.txt"
+diff <(printf '%s\n' "<exact expected_marker_content>") \
+     "$REPO_ROOT/MARKERS/<task_id>.txt"
+```
+
+If the task has no objective acceptance condition, it is not yet ready to dispatch — return it to spec authoring, do not paper over with subjective language.
 
 ### `## Pivot triggers`
 
@@ -187,5 +205,9 @@ In iteration 1: PR creation is **simulated**. Write `PR_SIMULATIONS/<task_id>.js
 **Template v2 — Stuck protocol (added based on user request 2026-05-03):**
 
 > **From design discussion:** Every executor must produce TWO stuck reports (Error4Orchestrator.md + ErrorDoubleCheck4Orchestrator.md) before exiting. The orchestrator reads them in order to maintain double-blind diagnosis.
+
+**Template v3 — Verifiable acceptance criteria (added 2026-05-05 from Lesson L-001, SHAKEDOWN-09):**
+
+> Every `## Acceptance criteria` section must be a runnable bash block. Prose criteria, subjective adjectives ("acceptable", "appropriate", "good enough"), and "I'll know it when I see it" formulations are forbidden. Tasks producing a marker file must declare a concrete `expected_marker_content` in frontmatter (no `TBD`, no `(none)` placeholders) and the acceptance block must `diff` or `grep` against that exact value. Orchestrator pre-dispatch validator greps for forbidden phrases (`subjective`, `should know it when`, `good enough`, `appropriate`, `use your judgment`) under the Acceptance heading and refuses to dispatch on match. See SPEC_LESSONS.md L-001 for the bad/fixed exemplars.
 
 (Future lessons appear here as they accumulate from SPEC_LESSONS.md.)
