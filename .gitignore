@@ -17,3 +17,11 @@ PR_SIMULATIONS/SHAKEDOWN-*.json
 .vscode/
 .idea/
 node_modules/
+
+# Secrets — never commit
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+.gitleaks-cache/
