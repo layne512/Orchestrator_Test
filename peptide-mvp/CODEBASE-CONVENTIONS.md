@@ -59,24 +59,67 @@ Every `createServiceClient()` use MUST:
 
 ## Auth + RBAC
 
-### Auth pattern
+> **VERIFIED against `486f63b` on 2026-05-06** (post-F10a halt). All exports below were `rg`-confirmed.
+
+### Auth surface
 
 - Supabase auth with email/password
-- Session validation via middleware (`middleware.ts`) and `lib/auth/guards.ts`
-- Roles: `patient`, `md`, `admin_super`, `admin_support`, `pharmacist` (see `roles` table from migration 005)
+- Session validation via `middleware.ts` and `lib/auth/guards.ts`
+- `lib/auth/roles.ts` exports the `UserRole` enum + permission helpers:
+  ```ts
+  export enum UserRole {
+    Patient = 'patient',
+    MD = 'md',
+    NP = 'np',
+    PA = 'pa',
+    Pharmacist = 'pharmacist',
+    AdminSupport = 'admin_support',
+    AdminManager = 'admin_manager',
+    AdminSuper = 'admin_super',
+  }
+  ```
+  No bare `'admin'` member. Admin checks must use one of `AdminSupport | AdminManager | AdminSuper`.
 
-### `requireAuth(role?)` helper
+### `lib/auth/guards.ts` — page-flow helpers (NOT for API routes)
 
 ```ts
-import { requireAuth, UserRole } from '@/lib/auth/guards'
-
-const session = await requireAuth(UserRole.AdminSuper)  // throws 401/403 if unauthenticated/wrong role
+export async function requireAuth(): Promise<AuthUser>           // no args; redirects /auth/sign-in if unauthed
+export async function requireRole(minimumRole: UserRole): Promise<AuthUser>  // redirects /unauthorized if below
+export async function verifyDbRole(userId: string, allowedRoles: string[]): Promise<boolean>
+export async function resolveDbRole(userId: string): Promise<UserRole>
 ```
+
+These call `redirect()` from `next/navigation` on failure. In an API-route context that surfaces as a 307 redirect, NOT a 401/403 JSON response. **Do NOT use `requireAuth` / `requireRole` in API routes.**
+
+### API-route auth pattern (canonical)
+
+```ts
+import { createClient } from '@/lib/supabase/server'
+import { verifyDbRole } from '@/lib/auth/guards'
+
+export async function POST(req: NextRequest) {
+  const authClient = await createClient()
+  const { data: { user }, error: authError } = await authClient.auth.getUser()
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // Role gate (when needed)
+  const isAdmin = await verifyDbRole(user.id, ['admin_super', 'admin_manager', 'admin_support'])
+  if (!isAdmin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // ... handler body
+}
+```
+
+This is the verified-correct pattern for any API route that needs auth + role gating. F10a Tier-1 halt was caused by a spec that referenced a non-existent helper file structure (`lib/auth/require-auth.ts`, `requireRole(session, 'admin')`) — those NEVER existed; the spec was authored against inferred conventions instead of grep results. See SPEC_LESSONS L-002.
 
 ### Forbidden patterns
 
-- **`SKIP_AUTH` bypass.** F42 — `middleware.ts:88-100` and `lib/auth/guards.ts:92-100` have `if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH)` bypasses. These will be removed in W0/W3. Do NOT add new ones.
-- **Hardcoded user IDs.** F9 surfaced this in `app/api/messaging/messages/route.ts`; sister bug F47 fixed via PR #31. Always use `session.user.id` from `requireAuth()` — never trust client-provided user IDs.
+- **`SKIP_AUTH` bypass.** F42 — `requireAuth()` in `lib/auth/guards.ts` has a `process.env.SKIP_AUTH === 'true'` short-circuit returning a mock user. Slated for removal in W0/W3. Do NOT add new ones. **Inline API-route auth using `createClient().auth.getUser()` is NOT subject to this bypass — additional security side-benefit of the inline pattern above.**
+- **Hardcoded user IDs.** F9 surfaced this in `app/api/messaging/messages/route.ts`; sister bug F47 fixed via PR #31. Always use `user.id` from the verified-real Supabase session — never trust client-provided user IDs.
 - **Anonymous DB queries on PHI tables.** Every PHI table read/write must run as the authenticated user (RLS enforces this).
 
 ---

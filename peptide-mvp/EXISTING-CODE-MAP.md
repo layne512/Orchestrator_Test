@@ -29,16 +29,23 @@ peptide-website/
 
 ### Auth + sessions
 
-| Concern | Location |
-|---|---|
-| Supabase server client | `lib/supabase/server.ts` (`createClient()` for user-scoped) |
-| Service-role client | `lib/supabase/admin.ts` (`createServiceClient()` — RLS bypass, server-only) |
-| `requireAuth()` helper | `lib/auth/require-auth.ts` |
-| Role check | `lib/auth/roles.ts` (`requireRole('admin' | 'md' | 'patient')`) |
-| Middleware route guard | `middleware.ts` |
-| Magic-link signup | `app/(auth)/signup/page.tsx`, `app/auth/callback/route.ts` |
+> **VERIFIED against `486f63b` on 2026-05-06** (post-F10a halt). All paths/exports `rg`-confirmed. Earlier draft of this section described files that never existed — corrected after F10a Tier-1 halt. See SPEC_LESSONS L-002.
 
-**Forbidden:** `SKIP_AUTH=true` env shim (F42 root cause). Never re-introduce.
+| Concern | Location | Notes |
+|---|---|---|
+| Supabase user-scoped client | `lib/supabase/server.ts` → `createClient()` | RLS-respecting; default for user-facing queries |
+| Supabase service-role client | `lib/supabase/server.ts` → `createServiceClient()` | RLS bypass; server-only; 169 occurrences in `app/api/` per F65 audit |
+| Auth guards (page flow) | `lib/auth/guards.ts` → `requireAuth()`, `requireRole(UserRole)` | **`redirect()` on failure** — NOT for API routes |
+| Role check (boolean) | `lib/auth/guards.ts` → `verifyDbRole(userId, allowedRoles[])` | Returns `Promise<boolean>`; safe for API routes |
+| Role resolution | `lib/auth/guards.ts` → `resolveDbRole(userId)` | Returns highest active `UserRole` from `user_roles` table |
+| Role enum | `lib/auth/roles.ts` → `UserRole` | `Patient \| MD \| NP \| PA \| Pharmacist \| AdminSupport \| AdminManager \| AdminSuper`. **No bare `'admin'`.** |
+| Permission helpers | `lib/auth/roles.ts` → `hasPermission`, `hasMinRole`, `isValidRole`, `getRoleLevel` | |
+| Middleware route guard | `middleware.ts` | |
+| Sign-in/up flows | `app/(auth)/signup/page.tsx`, `app/auth/callback/route.ts` | |
+
+**API-route auth pattern (canonical):** see `CODEBASE-CONVENTIONS.md` → Auth + RBAC → "API-route auth pattern". TL;DR: inline `createClient().auth.getUser()` for 401, then `verifyDbRole(user.id, [...])` for 403. Do NOT use `requireAuth` / `requireRole` in API routes — they redirect.
+
+**Forbidden:** `SKIP_AUTH=true` env shim (F42 root cause — currently lives inside `requireAuth()`). Never re-introduce. Inline API-route auth using `createClient().auth.getUser()` directly is immune to this bypass — extra security side-benefit.
 
 ### Subscriptions + billing (Stripe)
 

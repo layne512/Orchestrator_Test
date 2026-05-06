@@ -23,9 +23,17 @@ MD applicants click "Verify identity" and are taken into Stripe Identity's hoste
 
 ## Background
 
-Per `EXISTING-CODE-MAP.md`, both pieces already exist:
+Per `EXISTING-CODE-MAP.md`, both pieces are claimed to exist:
 - `components/md/application-form.tsx` renders a "Verify identity" button — currently a no-op.
 - `app/api/stripe/identity/route.ts` creates a Stripe Identity verification session and returns the redirect URL.
+
+> **⚠ unverified — grep before dispatch (per SPEC_LESSONS L-002):**
+> Both file paths above were authored from inferred conventions, not grep-verified against `486f63b`. Before dispatch, the executor MUST run:
+> ```bash
+> ls components/md/application-form.tsx app/api/stripe/identity/route.ts
+> rg "Verify identity|Stripe Identity|stripe.identity" components app
+> ```
+> If either file is missing or the button text differs, fire pivot trigger and halt before any edit. Do NOT invent the API route or the button — F69 is "wire-up only", and if the wires don't exist the task is mis-scoped.
 
 This task is purely the wire-up — no new infra, no new dependencies.
 
