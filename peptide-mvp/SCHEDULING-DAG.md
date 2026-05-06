@@ -108,12 +108,15 @@ See `W0-PLAN.md` for full detail. Summary:
 | F34 | Lab order placement API (signup→intake→labs flow B) | F33, F89 | 1d | `app/api/labs/order/route.ts` |
 | F35 | Lab results webhook + funnel transition | F33, F89 | 1d | `app/api/labs/webhook/route.ts` |
 | F88 | **NEW** Daily.co room provisioning | F25, V.17 | 1d | `lib/daily/client.ts`, `app/api/consult/room/route.ts` |
+| F69 | Wire Stripe Identity verification into MD application form (deferred from W0 cycle 3 — see spec_revision_notes) | F25, F69-pre-A, F69-pre-B | 0.25d | `components/md/application-form.tsx`, `app/api/stripe/identity/route.ts` |
+| F69-pre-A | Build Stripe Identity API route (`app/api/stripe/identity/route.ts`) — created by this task before F69 wires it | F25, V.3 decision | 0.5d | `app/api/stripe/identity/route.ts` |
+| F69-pre-B | Add "Verify identity" button to MD application form | F25 | 0.25d | `components/md/application-form.tsx` |
 | F36 | Consult booking flow (LABS_BACK → CONSULT_BOOKED) | F88, F89 | 1d | `app/(patient)/consult/book/page.tsx` |
 | F37 | Consult MD-side join + transition | F88, F89 | 0.5d | `components/md/consult-room.tsx` |
 | F38 | Notification dispatcher hooks per state transition | F89 | 1d | `lib/notifications/dispatch.ts` |
 | F40 | SMS/email templates for funnel transitions | F38 | 0.5d | `lib/notifications/templates/` |
 
-**W2 active task count:** 13.
+**W2 active task count:** 16 (added F69 + F69-pre-A + F69-pre-B from W0 deferral).
 
 ---
 

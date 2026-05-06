@@ -215,3 +215,63 @@ The rule also applies to `CODEBASE-CONVENTIONS.md` and `EXISTING-CODE-MAP.md`: e
 3. **Authoring environment rule:** the spec author's working session must have the target repo mounted/cloned and the author must `rg` against it as they write. Authoring from a sandbox without the target checkout is the actual root cause; remove the conditions and the failure class can't recur. (For peptide-website, this means future spec writes happen in a session with peptide-website cloned at `/home/user/peptide-website` or equivalent, NOT from `Orchestrator_Test/` alone.)
 
 A one-time follow-up task (F108-codebase-docs-verification) should sweep `CODEBASE-CONVENTIONS.md` + `EXISTING-CODE-MAP.md` + every existing W0/W1 spec against `486f63b` and emit a report of every unverified or stale citation. Run before W1 dispatch begins.
+
+---
+
+## Lesson L-003: Warning-sticker shipping is theater (the L-002 prevention rule was prescribed and ignored)
+
+**First seen:** 2026-05-06 (F69, peptide-website W0 cycle 3)
+**Recurrences of L-002 root cause:** 1 (F69 is the second instance of the same code-drift class L-002 was supposed to prevent)
+**Class:** prevention-not-enforced (sub-class: discipline-failure)
+
+**What went wrong:** F69 spec cited `app/api/stripe/identity/route.ts` and a "Verify identity" button on `components/md/application-form.tsx`. Neither exists at `486f63b`. After F10a halted with the same defect class and SPEC_LESSONS L-002 was written prescribing three prevention layers, the spec author "audited" F69 by adding a `# unverified — grep before dispatch (per SPEC_LESSONS L-002)` warning sticker to the spec — and shipped it anyway. The Mac executor then burned a full executor cycle (~60k tokens) to confirm what the warning already said: the citations don't exist. F69 went into stuck.json with the same `needs_human_decision` status as F10a v1.
+
+**Why it was a discipline issue, not a process gap:** L-002 layer 3 explicitly said "the spec author's working session must have the target repo mounted/cloned and the author must `rg` against it as they write. Authoring from a sandbox without the target checkout is the actual root cause; remove the conditions and the failure class can't recur." The spec author (this orchestrator session) had no peptide-website checkout in its sandbox, knew it had no checkout, knew the F69 citations were unverified, and chose to ship the spec with a warning sticker rather than (a) request checkout access, (b) move the spec to drafts, or (c) remove the unverified citations. Layer 3 of L-002 was prescribed; layer 3 was not enforced. Layer 1 of L-002 (the `# unverified` marker) was followed to the letter — and that letter-following was the whole problem, because the marker was treated as sufficient instead of as a draft flag.
+
+**Bad exemplar (the "warning sticker" pattern from F69 v2):**
+
+```
+## Background
+
+Per `EXISTING-CODE-MAP.md`, both pieces are claimed to exist:
+- `components/md/application-form.tsx` renders a "Verify identity" button — currently a no-op.
+- `app/api/stripe/identity/route.ts` creates a Stripe Identity verification session and returns the redirect URL.
+
+> **⚠ unverified — grep before dispatch (per SPEC_LESSONS L-002):**
+> Both file paths above were authored from inferred conventions, not grep-verified against `486f63b`. Before dispatch, the executor MUST run:
+> [grep commands here]
+> If either file is missing or the button text differs, fire pivot trigger and halt before any edit.
+```
+
+The spec was published. The orchestrator dispatched it. The executor halted. The "before dispatch" instruction was followed BY THE EXECUTOR, not by the spec author. That's executor work, not author work. Author shipped a known-defective spec with a polite request for the executor to verify it.
+
+**Fixed exemplar (what should have happened):**
+
+If the spec author can't verify a citation against the target checkout, the spec MUST take one of these three paths — never the fourth:
+
+1. **Verify it now.** Open the checkout, `rg` the citation, fix the spec, ship.
+2. **Remove the citation.** If the citation isn't load-bearing, delete it. Spec ships without it.
+3. **Move to `peptide-mvp/specs/drafts/`.** Spec is not a candidate for dispatch until someone with checkout access verifies and moves it back to `peptide-mvp/specs/W<N>/`. The orchestrator's pre-dispatch eligibility check explicitly excludes anything under `drafts/`.
+
+NEVER (4): ship to `peptide-mvp/specs/W<N>/` with an `# unverified` marker hoping the executor will catch it. That converts a 0-cost author-side check into a multi-thousand-token executor session every time, AND adds STUCK_STATE forensic noise that has to be reviewed and unwound.
+
+**Generalized rule:** SPEC_LESSONS L-002 layer 1 is hereby retired. The `# unverified` marker is forbidden in any spec that lives outside `peptide-mvp/specs/drafts/`. Pre-dispatch validation (L-002 layer 2) is upgraded from optional automation to mandatory — orchestrator MUST run the validation script before dispatching any spec, and MUST refuse to dispatch any spec containing the `# unverified` marker or any citation that fails grep against the anchor SHA. L-002 layer 3 (authoring environment) is upgraded from "should" to MUST — no spec authoring without target-repo grep access. If the authoring environment lacks checkout access, the author writes drafts only.
+
+**Other patterns this covers:**
+
+- "I'll flag this for the executor to handle" — no. If it's flagged, the author handles it before publishing.
+- "The pivot trigger covers this case" — no. Pivot triggers exist for runtime-only conditions the author couldn't predict (e.g., schema changed since spec was written). They do NOT exist as a substitute for author-side verification.
+- "It's a small spec, executors can absorb the cost" — no. Each warning-sticker spec costs at minimum one executor session (~15-60k tokens) plus orchestrator review of the STUCK_STATE plus author re-spin. The break-even cost of grep-verifying upfront is ~30 seconds.
+- Specs whose `must_read_before_writing` includes files the author hasn't read.
+- Specs whose "Background" section cites code structures the author hasn't visually confirmed in a checkout.
+- Specs that quote string literals (button copy, error messages, log lines) the author paraphrased from memory.
+
+**Prevention scope:** all spec authoring from now (2026-05-06) on. Three enforcement mechanisms:
+
+1. **`drafts/` directory convention:** `peptide-mvp/specs/drafts/` exists for un-grep-verified specs. Orchestrator's eligibility check excludes anything under that path.
+2. **Pre-dispatch validation script:** orchestrator runs `scripts/validate-spec.sh <spec-path>` before every dispatch. Script greps for `# unverified` markers, parses YAML + code blocks, runs `git ls-tree`/`git show`/`grep` against anchor SHA, halts dispatch on any failure. Mac session integrates this as a mandatory step before each `Task` subagent spawn.
+3. **Authoring-environment hard rule:** spec author MUST have the target repo at the anchor SHA accessible (mounted or cloned in the authoring session). If the authoring session lacks access, only DRAFTS may be produced, and a separate session with access verifies them before they leave `drafts/`.
+
+A one-time audit task (call it `F108-spec-audit-pass`) should run `scripts/validate-spec.sh` against every existing W0/W1/W2 spec and move every failing spec to `drafts/`. F108 is itself a meta-task that doesn't require spec authoring — it's a script run + bulk file moves.
+
+**Concrete remediation for the 2026-05-06 author state:** all in-flight W2/W3 spec authoring is suspended until the authoring environment has peptide-website checkout access. Two acceptable resolutions: (a) `GITHUB_TOKEN` provided to the orchestrator session so it can `git clone Layne512/peptide-website` and grep locally; (b) spec authoring relocates to a session with native checkout access (e.g., the Mac CLI session). No more specs ship to `peptide-mvp/specs/W*/` from environments without grep access.

@@ -1,21 +1,47 @@
 ---
 task_id: F69
-title: "Wire existing Stripe Identity button into MD application form"
-wave: W0
+title: "Wire Stripe Identity verification into MD application form"
+wave: W2
 tier: 2
-depends_on: [F104]
+depends_on: [F104, F69-pre-A, F69-pre-B]
 blocks: []
 files_owned:
   - components/md/application-form.tsx
+  - app/api/stripe/identity/route.ts   # CREATED by F69-pre-A, owned by this task only after creation
 must_read_before_writing:
   - peptide-mvp/CODEBASE-CONVENTIONS.md
   - peptide-mvp/EXISTING-CODE-MAP.md
   - components/md/application-form.tsx
   - app/api/stripe/identity/route.ts
+  - app/api/identity/verify/route.ts   # the existing identity route — must understand before duplicating
 schema_dependencies: []
 vendor_blocks: []
 estimated_effort: 0.25d
+spec_revision: 3
+spec_revision_notes: |
+  v1 authored against inferred conventions; deferred from W0 cycle 3 (2026-05-06).
+  F69 STUCK at 486f63b: app/api/stripe/identity/route.ts doesn't exist
+  (entire app/api/stripe/ subtree absent); components/md/application-form.tsx
+  has zero "Verify identity" button copy. SPEC_LESSONS L-002 trigger fired
+  exactly as the spec's own "unverified — grep before dispatch" warning predicted.
+
+  v3 moves F69 to W2 alongside V.3 (per-MD DoseSpot identity proofing) where
+  the broader MD onboarding flow is being built. Two prerequisite tasks
+  (F69-pre-A: build the Stripe Identity API route; F69-pre-B: add the button
+  to application-form.tsx) must land first. F69 itself remains the wire-up.
+
+  Open question for spec author at W2 entry: is Stripe Identity even the
+  chosen MD identity-verification vendor, or do we use the existing
+  app/api/identity/verify route (vendor unknown — needs audit)? If the
+  existing route is the canonical path, F69 is retracted entirely and a
+  different task wires the existing route's button hook.
 ---
+
+## Status: deferred from W0 to W2
+
+This spec was authored before the MD onboarding flow existed in code. At `486f63b` neither the Stripe Identity API route nor the form button exists, so there are no "wires" to wire up. Re-spec at W2 entry, after V.3 vendor work has clarified which identity-verification vendor MDs use and the broader MD onboarding flow has been built (likely via a sibling task in W2).
+
+## (Below: original W0 spec content kept for forensic reference. Do NOT execute as written.)
 
 ## User capability delivered
 

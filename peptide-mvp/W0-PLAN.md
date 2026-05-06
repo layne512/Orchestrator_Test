@@ -54,9 +54,10 @@ These 6 tasks have NO file overlap. All can dispatch in parallel after F104. Tot
 | # | Task | Effort | Depends on | Notes |
 |---|---|---|---|---|
 | F10c | Delete 21 dead-code files (NOT v1 generator) | S (0.5d) | F10a | bulk delete |
-| F69 | Wire existing Stripe Identity button into MD app form | XS (0.25d) | none (but small) | infra exists, hookup only |
 | F49 | Add secret-scanning pre-commit hook | XS (0.25d) | none | gitleaks config |
 | F41+F64 bundle | Security headers + Sentry source-map (one PR, both edit `next.config.ts`) | S (1d) | none | bundled to avoid file collision |
+
+**Removed from W0 mid-wave (cycle 3, 2026-05-06):** F69 (wire Stripe Identity button) — deferred to W2. The MD onboarding flow it wires into doesn't exist at `486f63b` (no `app/api/stripe/identity/route.ts`, no "Verify identity" button on the form). Spec was authored against an inferred future structure (SPEC_LESSONS L-002 trigger). Re-specs at W2 entry alongside V.3 (per-MD DoseSpot identity proofing).
 
 ---
 
