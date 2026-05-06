@@ -28,8 +28,8 @@ This is the reconciled, dispatchable plan. It supersedes the master list's Phase
 | Wave | Theme | Schema dep | Vendor block | Calendar |
 |---|---|---|---|---|
 | W0 | Unstick + foundation + orchestrator infra | none | none | 1 wk |
-| W1 | Subscriptions + funnel state + e-Rx + catalog | `024_w1_schema_batch.sql` | V.1, V.2 (DoseSpot) | 2 wk |
-| W2 | Pharmacy + labs + consult + notifications | `025_w2_schema_batch.sql` | V.5, V.6, V.7, V.17 | 2 wk |
+| W1 | Subscriptions + funnel state + e-Rx + catalog | `024_w1_schema_batch.sql` (last manual migration) | V.1, V.2 (DoseSpot) | 2 wk |
+| W2 | Pharmacy + labs + consult + notifications | F62b (adopt Supabase CLI) → `025_w2_schema_batch.sql` (first CLI migration) | V.5, V.6, V.7, V.17 | 2 wk |
 | W3 | Compliance hardening + audit logs + admin tools | `026_w3_schema_batch.sql` | V.4, V.8, V.11 | 2 wk |
 | W4 | Launch readiness (E2E, perf, monitoring, docs) | none | V.9, V.10, V.16 | 1-2 wk |
 
@@ -99,7 +99,8 @@ See `W0-PLAN.md` for full detail. Summary:
 
 | ID | Title | Depends on | Effort | files_owned (key) |
 |---|---|---|---|---|
-| F25 | **W2 schema batch** (`025_w2_schema_batch.sql`) | F12 | 1d | `supabase/migrations/025_w2_schema_batch.sql` |
+| F62b | **Adopt Supabase CLI migration runner** + backfill `schema_migrations` registry | F12 | 0.75d | `package.json`, `supabase/config.toml`, `supabase/README.md`, `scripts/backfill-schema-migrations.sql` |
+| F25 | **W2 schema batch** (`025_w2_schema_batch.sql`) — first migration shipped via CLI | F62b | 1d | `supabase/migrations/025_w2_schema_batch.sql` |
 | F20 | Empower TX 503A pharmacy adapter | F25, V.5 | 1.5d | `lib/pharmacy/empower.ts` |
 | F26 | Pharmacy order placement API | F20, F18 | 1d | `app/api/pharmacy/order/route.ts` |
 | F27 | Pharmacy webhook (shipment notification) | F20 | 0.5d | `app/api/pharmacy/webhook/route.ts` |
@@ -112,7 +113,7 @@ See `W0-PLAN.md` for full detail. Summary:
 | F38 | Notification dispatcher hooks per state transition | F89 | 1d | `lib/notifications/dispatch.ts` |
 | F40 | SMS/email templates for funnel transitions | F38 | 0.5d | `lib/notifications/templates/` |
 
-**W2 active task count:** 12.
+**W2 active task count:** 13.
 
 ---
 
