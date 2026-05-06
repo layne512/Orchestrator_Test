@@ -1,6 +1,6 @@
 ---
 task_id: F63
-title: "Resolve migration 018 naming collision"
+title: "Resolve migration 018 naming collision (rename to 018a/018b)"
 wave: W0
 tier: 1
 depends_on: [F104]
@@ -15,73 +15,88 @@ must_read_before_writing:
   - supabase/migrations/018_rls_phi_gaps.sql
 schema_dependencies: []
 vendor_blocks: []
-estimated_effort: 0.5d
+estimated_effort: 0.25d
+spec_revision: 2
+spec_revision_notes: |
+  v1 required querying production Supabase to determine apply order.
+  Investigation 2026-05-06 confirmed prod has NO supabase_migrations.schema_migrations
+  table — migrations were applied manually via Dashboard SQL Editor without
+  tracking. There is no registry to reconcile. Resolution simplifies to a
+  pure source-file rename, alphabetical order.
 ---
 
 ## User capability delivered
 
-None directly — this is infrastructure. Unblocks the W1 schema batch (F12), which cannot safely add `024_*.sql` while two `018_*.sql` files exist.
+None directly. Unblocks F12 (W1 schema batch) by removing the duplicate `018` prefix that breaks lex-order safety on future migrations.
 
-## Background
+## Background — verified state
 
-Both `supabase/migrations/018_rls_knowledge_base.sql` and `supabase/migrations/018_rls_phi_gaps.sql` exist on `main`. Supabase CLI applies migrations in lexicographic order by filename — with two files sharing the `018` prefix, the apply order depends on the rest of the filename, which is fine for fresh databases but means the `schema_migrations` table on production may have recorded one or both with whichever name applied.
+Both files exist on `486f63b`:
+- `supabase/migrations/018_rls_knowledge_base.sql` — 322 lines, RLS on 16 KB tables. NOT idempotent (no `DROP POLICY IF EXISTS`).
+- `supabase/migrations/018_rls_phi_gaps.sql` — 70 lines, RLS on `user_intake_sessions` + `protocols`. IS idempotent.
 
-## Required pre-task: determine which applied first on prod
+**No migration registry in prod.** Confirmed 2026-05-06 via Supabase Dashboard SQL Editor — `supabase_migrations.schema_migrations` does not exist. Migrations were applied directly via Dashboard SQL Editor or `psql`, no version tracking. **There is no prod state to reconcile.**
 
-Before renaming, the executor must determine the production apply order:
+Therefore the resolution is a simple source-file rename for lex-order safety, alphabetical order chosen.
 
-```bash
-# Production Supabase project — read schema_migrations table
-# (executor must request access from orchestrator if not already granted)
-psql "$PROD_DB_URL" -c "SELECT version, name, executed_at FROM supabase_migrations.schema_migrations WHERE version LIKE '018%' ORDER BY executed_at;"
-```
+## Out of scope
 
-If neither has been applied to prod yet (still only on dev): pick the alphabetic order — `knowledge_base` runs before `phi_gaps`.
+The non-idempotent nature of `018_rls_knowledge_base.sql` (no `DROP POLICY IF EXISTS`) means re-running it will fail. Not F63's problem; only matters if a re-run is ever needed.
 
 ## Technical scope
 
-Two acceptable resolutions — pick whichever matches the prod history:
+Use `git mv` (preserves blame + history) to rename:
 
-**Option A (preferred — minimum churn):** rename to suffix-letter form.
-- `018_rls_knowledge_base.sql` → `018a_rls_knowledge_base.sql`
-- `018_rls_phi_gaps.sql` → `018b_rls_phi_gaps.sql`
-- (or swap `a`/`b` to match prod apply order)
+```bash
+cd <peptide-website-root>
+git mv supabase/migrations/018_rls_knowledge_base.sql supabase/migrations/018a_rls_knowledge_base.sql
+git mv supabase/migrations/018_rls_phi_gaps.sql supabase/migrations/018b_rls_phi_gaps.sql
+```
 
-**Option B:** renumber the second-applied to the next available number.
-- Whichever applied later → renamed to `024_<original_name>.sql`
-- The other → keep as `018_<name>.sql` (drop suffix)
-- ⚠️ Option B requires a `supabase_migrations.schema_migrations` UPDATE on every existing environment (dev, staging, prod) to update the version row. Document this in the PR.
+No content changes inside either file. No registry update. No DB action.
 
 ## Verifiable acceptance criteria
 
 ```bash
 # (a) no two files share an 018 prefix
-[ "$(ls supabase/migrations/018*.sql | wc -l)" -le 1 ] || \
-  ([ "$(ls supabase/migrations/018a*.sql | wc -l)" = "1" ] && [ "$(ls supabase/migrations/018b*.sql | wc -l)" = "1" ])
+[ "$(ls supabase/migrations/018_*.sql 2>/dev/null | wc -l)" = "0" ]
 
-# (b) git history preserves the rename (uses git mv, not delete+create)
-git log --follow --format='%H' -- supabase/migrations/018a_rls_knowledge_base.sql 2>/dev/null | head -1
-git log --follow --format='%H' -- supabase/migrations/018b_rls_phi_gaps.sql 2>/dev/null | head -1
+# (b) both renamed files exist
+[ -f supabase/migrations/018a_rls_knowledge_base.sql ]
+[ -f supabase/migrations/018b_rls_phi_gaps.sql ]
 
-# (c) supabase CLI dry-run does not error
-npx supabase db lint || true   # informational
-npx supabase migration list
+# (c) rename used git mv (so blame/history follow)
+git log --follow --format='%H' -- supabase/migrations/018a_rls_knowledge_base.sql | head -1 | grep -E "^[0-9a-f]{40}$"
+git log --follow --format='%H' -- supabase/migrations/018b_rls_phi_gaps.sql | head -1 | grep -E "^[0-9a-f]{40}$"
 
-# (d) PR description documents the prod apply order finding + which option chosen + (if Option B) the schema_migrations UPDATE script
+# (d) git treats both as renames, not delete+create
+git diff --name-status main..HEAD -- supabase/migrations/ | grep -E "^R" | wc -l | (read N; [ "$N" = "2" ])
 
-# (e) build + typecheck still pass (sanity)
-npm run build
-npm run typecheck
+# (e) file content unchanged (only paths moved)
+git diff main..HEAD -- supabase/migrations/018a_rls_knowledge_base.sql | wc -l | (read N; [ "$N" = "0" ])
+git diff main..HEAD -- supabase/migrations/018b_rls_phi_gaps.sql | wc -l | (read N; [ "$N" = "0" ])
+
+# (f) lex order is preserved (no migration sorts before 017 or after 019 unexpectedly)
+ls supabase/migrations/ | sort | grep -E "^01[789]" | head -5
+# expected output:
+#   017_fix_roles_seed.sql
+#   018a_rls_knowledge_base.sql
+#   018b_rls_phi_gaps.sql
+#   019_intake_session_persistence.sql
+
+# (g) build + typecheck unchanged (sanity — file rename shouldn't affect TS)
+npm run build 2>&1 | tee /tmp/f63-build.log
+grep -E "error|Error" /tmp/f63-build.log | grep -v "SensitivityChart" | grep -v "investor-relations" | (read line; [ -z "$line" ])
 ```
 
 ## Pivot triggers
 
-- If the executor cannot access `$PROD_DB_URL` (no service-role key, no admin access): halt, do NOT guess. Orchestrator must escalate to the user for prod inspection.
-- If both files have already been applied to multiple envs and the apply order differs across envs: halt, escalate — this is a multi-env reconciliation, not a single rename.
-- If the migrations contain `DROP` or destructive DDL: extra caution. Verify against prod schema before any rename — Supabase CLI may attempt to re-run.
+- If `supabase_migrations.schema_migrations` actually DOES exist in prod (e.g., the user later adopts Supabase CLI and the table appears): halt and write STUCK_STATE — F63 v3 is needed with a registry-update step.
+- If there are >2 files matching `018_*.sql` (an unexpected third file): halt and report — investigation needed.
+- If `git mv` fails or git treats the operation as delete+create instead of rename: halt — the operation must preserve history.
 
 ## Notes for executor
 
-Use `git mv`, not `rm` + new file, so blame and history follow the rename.
+This is a pure rename. If you find yourself editing file contents, you've gone off-script. The whole task is two `git mv` invocations + commit.
 
-This task is the gating prereq for F12 (W1 schema batch). Don't merge F63 without confirming prod state, even if dev compiles.
+PR description should explicitly note: "No prod DB action required — peptide-website does not currently use Supabase CLI's `schema_migrations` registry. Resolution is source-only."
